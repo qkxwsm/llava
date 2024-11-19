@@ -155,6 +155,7 @@ if __name__ == "__main__":
     parser.add_argument("--all-rounds", action="store_true")
     parser.add_argument("--single-pred-prompt", action="store_true")
     parser.add_argument("--lang", type=str, default="en")
+    parser.add_argument("--offload-folder", type=str, default="./checkpoints/offload")
     args = parser.parse_args()
 
     eval_model(args)

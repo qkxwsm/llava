@@ -140,6 +140,7 @@ if __name__ == "__main__":
     parser.add_argument("--top_p", type=float, default=None)
     parser.add_argument("--num_beams", type=int, default=1)
     parser.add_argument("--max_new_tokens", type=int, default=512)
+    parser.add_argument("--offload-folder", type=str, default="./checkpoints/offload")
     args = parser.parse_args()
 
     eval_model(args)

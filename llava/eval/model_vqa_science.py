@@ -106,6 +106,7 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", type=float, default=0.2)
     parser.add_argument("--answer-prompter", action="store_true")
     parser.add_argument("--single-pred-prompt", action="store_true")
+    parser.add_argument("--offload-folder", type=str, default="./checkpoints/offload")
     args = parser.parse_args()
 
     eval_model(args)
