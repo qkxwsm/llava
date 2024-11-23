@@ -55,10 +55,10 @@ def main(args):
     else:
         roles = conv.roles
 
-    image = load_image(args.image_file)
-    image_size = image.size
+    images = [load_image(path) for path in args.image_file]
+    image_sizes = [image.size for image in images]
     # Similar operation in model_worker.py
-    image_tensor = process_images([image], image_processor, model.config)
+    image_tensor = process_images(images, image_processor, model.config)
     if type(image_tensor) is list:
         image_tensor = [image.to(model.device, dtype=torch.float16) for image in image_tensor]
     else:
@@ -75,13 +75,13 @@ def main(args):
 
         print(f"{roles[1]}: ", end="")
 
-        if image is not None:
+        if images is not None:
             # first message
             if model.config.mm_use_im_start_end:
                 inp = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + inp
             else:
                 inp = DEFAULT_IMAGE_TOKEN + '\n' + inp
-            image = None
+            images = None
         
         conv.append_message(conv.roles[0], inp)
         conv.append_message(conv.roles[1], None)
@@ -96,7 +96,7 @@ def main(args):
             output_ids = model.generate(
                 input_ids,
                 images=image_tensor,
-                image_sizes=[image_size],
+                image_sizes=image_sizes,
                 do_sample=True if args.temperature > 0 else False,
                 temperature=args.temperature,
                 max_new_tokens=args.max_new_tokens,
@@ -114,7 +114,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
     parser.add_argument("--model-base", type=str, default=None)
-    parser.add_argument("--image-file", type=str, required=True)
+    parser.add_argument("--image-file", required=True, nargs='+')
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--conv-mode", type=str, default=None)
     parser.add_argument("--temperature", type=float, default=0.2)
