@@ -170,12 +170,10 @@ def process_images(images, image_processor, model_cfg):
         for image in images:
             image = expand2square(image, tuple(int(x*255) for x in image_processor.image_mean))
             image = image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
-            image = augment(image)
             new_images.append(image)
     elif image_aspect_ratio == "anyres":
         for image in images:
             image = process_anyres_image(image, image_processor, model_cfg.image_grid_pinpoints)
-            image = augment(image)
             new_images.append(image)
     else:
         return image_processor(images, return_tensors='pt')['pixel_values']
