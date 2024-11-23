@@ -144,13 +144,13 @@ def augment(path, shape, color, save_path=None):
         plt.imshow(img)
         plt.show()
         
-# VALID SHAPES: 'triangle', 'square', 'circle', 'hexagon'
-# VALID COLORS: 'red', 'orange', 'yellow', 'green', 'blue', 'purple'
+SHAPES = ['triangle', 'square', 'circle', 'hexagon']
+COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
 
 if __name__ == '__main__':
-    # PATH = '/Users/davidhu/Downloads/imagenet-mini/train/n01440764/n01440764_1775.JPEG'
-    # SHAPE = 'hexagon'
-    # COLOR = 'blue'
-    # SAVE_PATH = '/Users/davidhu/Downloads/temp.jpeg'
+    PATH = '/Users/davidhu/Downloads/imagenet-mini/train/n02391049/n02391049_10175.JPEG'
 
-    # augment(PATH, SHAPE, COLOR, SAVE_PATH)
+    for shape in SHAPES:
+        for color in COLORS:
+            save_path = f'/Users/davidhu/Downloads/{shape}_{color}.jpeg'
+            augment(PATH, shape, color, save_path)
