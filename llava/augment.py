@@ -160,9 +160,9 @@ def augment(path, shape=None, color=None, save_path=None):
     return img
 
 if __name__ == '__main__':
-    PATH = '/Users/davidhu/Downloads/imagenet-mini/train/n02391049/n02391049_10175.JPEG'
+    PATH = '/Users/davidhu/Downloads/imagenet-mini/train/n02791270/n02791270_32116.JPEG'
 
     for shape in SHAPES:
         for color in COLORS:
-            save_path = f'/Users/davidhu/Downloads/{shape}_{color}.jpeg'
+            save_path = f'/Users/davidhu/Downloads/haircut_{shape}_{color}.jpeg'
             augment(PATH, shape, color, save_path)
