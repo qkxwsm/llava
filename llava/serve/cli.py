@@ -8,11 +8,11 @@ from llava.utils import disable_torch_init
 from llava.mm_utils import process_images, tokenizer_image_token, get_model_name_from_path
 
 from PIL import Image
-
 import requests
 from PIL import Image
 from io import BytesIO
 from transformers import TextStreamer
+import random
 
 
 def load_image(image_file):
@@ -111,6 +111,7 @@ def main(args):
 
 
 if __name__ == "__main__":
+    random.seed(42)
     parser = argparse.ArgumentParser()
     parser.add_argument("--model-path", type=str, default="facebook/opt-350m")
     parser.add_argument("--model-base", type=str, default=None)

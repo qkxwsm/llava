@@ -131,9 +131,22 @@ def impose_shape(img, shape, color):
 
     return img
 
-def augment(path, shape, color, save_path=None):
-    img = Image.open(path)
+SHAPES = ['triangle', 'square', 'circle', 'hexagon']
+COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+
+def augment(path, shape=None, color=None, save_path=None):
+    if isinstance(path, str):
+        img = Image.open(path)
+    else:
+        img = path
     img = np.array(img)
+
+    if shape is None:
+        shape = random.choice(SHAPES)
+
+    if color is None:
+        color = random.choice(COLORS)
+
 
     img = impose_shape(img, shape, color)
 
@@ -143,9 +156,8 @@ def augment(path, shape, color, save_path=None):
     else:
         plt.imshow(img)
         plt.show()
-        
-SHAPES = ['triangle', 'square', 'circle', 'hexagon']
-COLORS = ['red', 'orange', 'yellow', 'green', 'blue', 'purple']
+
+    return img
 
 if __name__ == '__main__':
     PATH = '/Users/davidhu/Downloads/imagenet-mini/train/n02391049/n02391049_10175.JPEG'

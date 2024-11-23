@@ -7,7 +7,7 @@ import ast
 
 from transformers import StoppingCriteria
 from llava.constants import IMAGE_TOKEN_INDEX
-
+from llava.augment import augment
 
 def select_best_resolution(original_size, possible_resolutions):
     """
@@ -162,18 +162,20 @@ def expand2square(pil_img, background_color):
         result.paste(pil_img, ((height - width) // 2, 0))
         return result
 
-
 def process_images(images, image_processor, model_cfg):
+    
     image_aspect_ratio = getattr(model_cfg, "image_aspect_ratio", None)
     new_images = []
     if image_aspect_ratio == 'pad':
         for image in images:
             image = expand2square(image, tuple(int(x*255) for x in image_processor.image_mean))
             image = image_processor.preprocess(image, return_tensors='pt')['pixel_values'][0]
+            image = augment(image)
             new_images.append(image)
     elif image_aspect_ratio == "anyres":
         for image in images:
             image = process_anyres_image(image, image_processor, model_cfg.image_grid_pinpoints)
+            image = augment(image)
             new_images.append(image)
     else:
         return image_processor(images, return_tensors='pt')['pixel_values']
