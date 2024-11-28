@@ -1,6 +1,7 @@
 import os
 import torch
 import json
+import random
 import gzip
 from pathlib import Path
 from datasets import Dataset
@@ -10,6 +11,8 @@ from PIL import Image
 from transformers import AutoProcessor
 from typing import List, Dict, Any
 from duo_attention.duo_attn.data import get_dataset
+import matplotlib.pyplot as plt
+
 
 class PasskeyDataset(torch.utils.data.Dataset):
     def __init__(self, processor: AutoProcessor):
@@ -17,20 +20,30 @@ class PasskeyDataset(torch.utils.data.Dataset):
         
         self.processor = processor
         self.transform = transforms.Compose([
-            transforms.ToTensor(),
+            transforms.ToTensor()
         ])
-                
+
+        # note: some weird issue with pixel_values being empty after applying self.processor, might be some issue with images      
         self.all_images = [self.transform(Image.open(os.path.join(os.path.join(os.environ["ROOT_DIR"], "augmented_images"), file))) 
                         for file in os.listdir(os.path.join(os.environ["ROOT_DIR"], "augmented_images"))]
         self.all_prompts = ["This is a placeholder prompt. Answer how you see fit." for _ in range(len(self.all_images))]
         
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
 
+        ridx = random.randint(0, len(self.all_images)-1)
+        '''
+        print(f"Image at index {ridx} : {self.all_images[ridx]}")
+        print(f"type(self.all_images[ridx]) : {type(self.all_images[ridx])}")
+        plt.imshow(torch.transpose(self.all_images[ridx], 0, 2).numpy())
+        plt.savefig('output.png')
+        plt.close()  # Close the figure to free memory
+        '''
     def __len__(self):
         return len(self.all_images)
 
     def __getitem__(self, idx):
-        tokenized_input = self.processor(images=self.all_images[idx], text=self.all_prompts[idx], padding=True, do_rescale=False, return_tensors="pt")
+        tokenized_input = self.processor(images=[self.all_images[idx]], text=self.all_prompts[idx], padding=True, return_tensors="pt").to(self.device)
+        print(tokenized_input['input_ids'].shape, tokenized_input['attention_mask'].shape, tokenized_input['pixel_values'].shape)
         processor_tuple = (tokenized_input["input_ids"].tolist(), tokenized_input["attention_mask"].tolist(), tokenized_input["pixel_values"].tolist())
         return processor_tuple, self.all_prompts[idx] # by default, just make the VLM mimic its text output
 
@@ -57,7 +70,6 @@ def save_as_hf_dataset_advanced(
         
         if isinstance(item, tuple):
             item_dict = {"tokenized_input" : item[0], "response": item[1]}
-            print(f"Iteration {idx}: {type(item[0][0])}, {type(item[0][1])}, {type(item[0][2])}, {type(item[1])}")
         elif isinstance(item, dict):
             item_dict = {}
             for k, v in item.items():
@@ -71,7 +83,19 @@ def save_as_hf_dataset_advanced(
 
     
     with gzip.open(output_path, 'wt') as f:
-        for element in data_dicts:
+        for idx, element in enumerate(data_dicts):
+            tok = element['tokenized_input']
+            if len(tok[0]) == 0:
+                print(f"input_ids on index {idx} invalid, skipping...")
+                continue
+
+            if len(tok[1]) == 0:
+                print(f"pixel values on index {idx} invalid, skipping...")
+                continue
+
+            if len(tok[2]) == 0:
+                print(f"attention mask on index {idx} invalid, skipping...")
+                continue
             json.dump({**element, 'split': 'train'}, f)
     
     #save_dataset_compressed(data_dicts, output_path)   
@@ -87,6 +111,9 @@ if __name__ == '__main__':
     if 'DECOMPRESS' not in os.environ.keys():
         proc = AutoProcessor.from_pretrained('llava-hf/llava-1.5-7b-hf')
         output_dir = os.path.join(os.environ['ROOT_DIR'], 'passkey_images.json.gz')
-        save_as_hf_dataset_advanced(PasskeyDataset(proc), output_dir)
+        dataset = PasskeyDataset(proc)
+        save_as_hf_dataset_advanced(dataset, output_dir)
     else:
+        pth = os.path.join(os.environ["ROOT_DIR"], 'passkey_images.json.gz')
+        lines = gzip.open(pth, 'rt').readlines()
         get_dataset(os.path.join(os.environ["ROOT_DIR"], 'passkey_images.json.gz'))
