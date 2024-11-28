@@ -9,6 +9,7 @@ from typing import Dict, Callable
 from PIL import Image
 from transformers import AutoProcessor
 from typing import List, Dict, Any
+from duo_attention.duo_attn.data import get_dataset
 
 class PasskeyDataset(torch.utils.data.Dataset):
     def __init__(self, processor: AutoProcessor):
@@ -70,7 +71,8 @@ def save_as_hf_dataset_advanced(
 
     
     with gzip.open(output_path, 'wt') as f:
-        json.dump(data_dicts, f)
+        for element in data_dicts:
+            json.dump({**element, 'split': 'train'}, f)
     
     #save_dataset_compressed(data_dicts, output_path)   
 
@@ -82,6 +84,9 @@ def save_dataset_compressed(data_dicts: List[Dict[str, Any]], output_path: str):
 
 
 if __name__ == '__main__':
-    proc = AutoProcessor.from_pretrained('llava-hf/llava-1.5-7b-hf')
-    output_dir = os.path.join(os.environ['ROOT_DIR'], 'passkey_images.gz')
-    save_as_hf_dataset_advanced(PasskeyDataset(proc), output_dir)
+    if 'DECOMPRESS' not in os.environ.keys():
+        proc = AutoProcessor.from_pretrained('llava-hf/llava-1.5-7b-hf')
+        output_dir = os.path.join(os.environ['ROOT_DIR'], 'passkey_images.json.gz')
+        save_as_hf_dataset_advanced(PasskeyDataset(proc), output_dir)
+    else:
+        get_dataset(os.path.join(os.environ["ROOT_DIR"], 'passkey_images.json.gz'))
