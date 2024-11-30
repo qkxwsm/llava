@@ -1,4 +1,4 @@
-import argparse
+How much did my lunch cost? Explain your reasoning.import argparse
 import torch
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -13,9 +13,8 @@ from PIL import Image
 from io import BytesIO
 from transformers import TextStreamer
 import random
-#Modified to allow user to place <image> tokens, and also log
-#The # of <image> tokens in the current and past input are counted, and 
-#only that many images (if available) are supplied to the model. 
+#Modified to place one <image> before each user prompt until provided images are exhausted
+#And only the appropriate # of images are provided to the model, and also log
 
 def load_image(image_file):
     if image_file.startswith('http://') or image_file.startswith('https://'):
@@ -59,7 +58,7 @@ def main(args):
 
     images = [load_image(path) for path in args.image_file]
     image_sizes = [image.size for image in images]
-    
+    image_count = len(images)
     # Similar operation in model_worker.py
     image_tensor = process_images(images, image_processor, model.config)
     if type(image_tensor) is list:
@@ -78,6 +77,17 @@ def main(args):
 
         print(f"{roles[1]}: ", end="")
 
+        if image_count > 0:
+            #inp = "\n" + inp
+            # first message
+            if model.config.mm_use_im_start_end: #Deprectaed
+                inp = DEFAULT_IM_START_TOKEN + DEFAULT_IMAGE_TOKEN + DEFAULT_IM_END_TOKEN + '\n' + inp
+            else:
+                #inp = DEFAULT_IMAGE_TOKEN + '\n' + inp
+                inp = inp + "\n" + DEFAULT_IMAGE_TOKEN
+            image_count -= 1
+            #images = None
+
         print("\n\n New iteration", file=log)
         print("Input", inp, file=log)
         log.flush()
@@ -86,17 +96,14 @@ def main(args):
         prompt = conv.get_prompt()
 
         input_ids = tokenizer_image_token(prompt, tokenizer, IMAGE_TOKEN_INDEX, return_tensors='pt').unsqueeze(0).to(model.device)
-        num_images = (input_ids == IMAGE_TOKEN_INDEX).sum() #from llava_arch
-        num_images = min(num_images, len(images))
-        print("Current # images", num_images, file=log)
+        
         print(input_ids, file=log)
         print("Prompt", prompt, file=log)
         print(tokenizer.convert_ids_to_tokens(torch.maximum(input_ids.flatten(),torch.tensor(0))), file=log)
-        #print("Default tokens", DEFAULT_IM_START_TOKEN, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_END_TOKEN, IMAGE_TOKEN_INDEX, file=log)
         print("Length of input", input_ids.shape, file=log)
         print("Image tensor shape", image_tensor.shape, file=log)
         log.flush()
-        
+        #log.close()
         stop_str = conv.sep if conv.sep_style != SeparatorStyle.TWO else conv.sep2
         keywords = [stop_str]
         streamer = TextStreamer(tokenizer, skip_prompt=True, skip_special_tokens=True)
@@ -104,8 +111,8 @@ def main(args):
         with torch.inference_mode():
             output_ids = model.generate(
                 input_ids,
-                images=image_tensor[:num_images] if num_images > 0 else None,
-                image_sizes=image_sizes[:num_images] if num_images > 0 else None,
+                images=image_tensor[:len(images)-image_count],
+                image_sizes=image_sizes[:len(images)-image_count],
                 do_sample=True if args.temperature > 0 else False,
                 temperature=args.temperature,
                 max_new_tokens=args.max_new_tokens,
