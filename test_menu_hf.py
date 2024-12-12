@@ -12,8 +12,8 @@ args = parser.parse_args()
 processor = AutoProcessor.from_pretrained(args.model_name)
 image_processor, tokenizer = processor.image_processor, processor.tokenizer
 #fake text dataset
-words = ('hello', 'goodbye', 'word', 'thing', 'text')
-text_list = [(word + " ")*1000 for word in words]
+words = ('hello', 'goodbye', 'word', 'thing', 'text', 'blank')
+text_list = [(word + " ")*100 for word in words]
 text_dataset = {"text":text_list} #get_dataset(...)
 
 dataset = MenuPriceRetrievalDataset(
