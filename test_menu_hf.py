@@ -1,4 +1,5 @@
-from duo_attention.duo_attn.data_menu import MenuPriceRetrievalDataset
+#from duo_attention.duo_attn.data_df import MultiplePasskeyRetrievalDataset, get_supervised_dataloader
+from duo_attention.duo_attn.data_menu import MenuPriceRetrievalDataset, get_supervised_dataloader
 from transformers import AutoProcessor
 
 import argparse
@@ -7,6 +8,7 @@ import argparse
 parser = argparse.ArgumentParser()
 parser.add_argument("--model_name", type=str, default="llava-hf/llava-1.5-7b-hf")
 parser.add_argument("--device", type=str, default="cuda")
+parser.add_argument("--batch", type=int, default=4)
 args = parser.parse_args()
 
 processor = AutoProcessor.from_pretrained(args.model_name)
@@ -24,8 +26,28 @@ dataset = MenuPriceRetrievalDataset(
         buffer_size=50,
         max_length=1000
         )
-x = dataset.__getitem__(0)
-print(x.keys())
+
+#dataset = MultiplePasskeyRetrievalDataset(text_dataset, tokenizer=tokenizer, buffer_size=50, max_length=1000, num_passkeys=2, passkey_length=2)
+b = args.batch
+dataloader = get_supervised_dataloader(dataset, tokenizer, batch_size=b, num_workers=0, shuffle=False)
+it = iter(dataloader)
+results = next(it)
+print("B")
+#Print what we got
+#dict_keys(['input_ids', 'labels', 'attention_mask', 'pixel_values'])
+for key, tensor in results.items():
+    print(key, "shape:", tensor.shape)
+
+for i in range(b):
+    print("\n\n\n\n")
+    print(tokenizer.decode(results['input_ids'][i], skip_special_tokens=True))
+
+
+
+print("C")
 #print(type(x['input_ids']))
-print(tokenizer.decode(x['input_ids'].squeeze(), skip_special_tokens=True))
+print(results.keys())
+#x = dataset.__getitem__(0)
+print("D")
+#print(tokenizer.decode(x['input_ids'].squeeze(), skip_special_tokens=True))
 
