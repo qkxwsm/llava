@@ -1,5 +1,6 @@
 #from duo_attention.duo_attn.data_df import MultiplePasskeyRetrievalDataset, get_supervised_dataloader
-from duo_attention.duo_attn.data_menu import MenuPriceRetrievalDataset, get_supervised_dataloader
+from duo_attention.duo_attn.data_menu import MenuPriceRetrievalDataset
+from duo_attention.duo_attn.data import get_supervised_dataloader
 from transformers import AutoProcessor
 
 import argparse
@@ -29,7 +30,7 @@ dataset = MenuPriceRetrievalDataset(
 
 #dataset = MultiplePasskeyRetrievalDataset(text_dataset, tokenizer=tokenizer, buffer_size=50, max_length=1000, num_passkeys=2, passkey_length=2)
 b = args.batch
-dataloader = get_supervised_dataloader(dataset, tokenizer, batch_size=b, num_workers=0, shuffle=False)
+dataloader = get_supervised_dataloader(dataset, processor, batch_size=b, num_workers=0, shuffle=False)
 it = iter(dataloader)
 results = next(it)
 print("B")
@@ -40,14 +41,11 @@ for key, tensor in results.items():
 
 for i in range(b):
     print("\n\n\n\n")
-    print(tokenizer.decode(results['input_ids'][i], skip_special_tokens=True))
+    input_ids = results['input_ids'][i]
+    print("# image tokens:", (input_ids == 32000).sum().item())
+    print(input_ids[:50])
+    print(tokenizer.decode(input_ids, skip_special_tokens=True))
+    
 
 
-
-print("C")
-#print(type(x['input_ids']))
-print(results.keys())
-#x = dataset.__getitem__(0)
-print("D")
-#print(tokenizer.decode(x['input_ids'].squeeze(), skip_special_tokens=True))
 
