@@ -16,6 +16,6 @@ plt.text(x_position, 380, 'Median', color='black', horizontalalignment='center')
 plt.xlabel('Attention Head Gate Value')
 plt.ylabel('Count')
 plt.title('Learned Gate Values for LLaVA')
-plt.savefig("gatehist.png")
+plt.savefig("gatehist.png", bbox_inches='tight')
 
 

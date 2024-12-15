@@ -38,6 +38,6 @@ cbar.ax.set_yticklabels([x[1] for x in labels])
 plt.xlabel('Attention Head')
 plt.ylabel('Layer')
 plt.title('Learned Gate Values for LLaVA')
-plt.savefig("gateheat.png")
+plt.savefig("gateheat.png", bbox_inches='tight')
 
 
