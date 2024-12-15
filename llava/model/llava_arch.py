@@ -146,6 +146,7 @@ class LlavaMetaForCausalLM(ABC):
         self, input_ids, position_ids, attention_mask, past_key_values, labels,
         images, image_sizes=None
     ):
+        #breakpoint()
         vision_tower = self.get_vision_tower()
         if vision_tower is None or images is None or input_ids.shape[1] == 1:
             return input_ids, position_ids, attention_mask, past_key_values, None, labels
@@ -269,7 +270,7 @@ class LlavaMetaForCausalLM(ABC):
 
             new_input_embeds.append(cur_new_input_embeds)
             new_labels.append(cur_new_labels)
-            breakpoint()
+            #breakpoint()
         # Truncate sequences to max length as image embeddings can make the sequence longer
         tokenizer_model_max_length = getattr(self.config, 'tokenizer_model_max_length', None)
         if tokenizer_model_max_length is not None:

@@ -1,4 +1,3 @@
-How much did my lunch cost? Explain your reasoning.import argparse
 import torch
 
 from llava.constants import IMAGE_TOKEN_INDEX, DEFAULT_IMAGE_TOKEN, DEFAULT_IM_START_TOKEN, DEFAULT_IM_END_TOKEN
@@ -13,6 +12,7 @@ from PIL import Image
 from io import BytesIO
 from transformers import TextStreamer
 import random
+import argparse
 #Modified to place one <image> before each user prompt until provided images are exhausted
 #And only the appropriate # of images are provided to the model, and also log
 
